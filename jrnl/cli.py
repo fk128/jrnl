@@ -33,6 +33,7 @@ def parse_args(args=None):
 
     composing = parser.add_argument_group('Composing', 'To write an entry simply write it on the command line, e.g. "jrnl yesterday at 1pm: Went to the gym."')
     composing.add_argument('text', metavar='', nargs="*")
+    composing.add_argument('-nj', '--newjrnl', dest='nj', help='create new journal')
 
     reading = parser.add_argument_group('Reading', 'Specifying either of these parameters will display posts of your journal')
     reading.add_argument('-from', dest='start_date', metavar="DATE", help='View entries after this date')
@@ -98,6 +99,13 @@ def touch_journal(filename):
         open(filename, 'a').close()
 
 
+def new_journal(config, name):
+    """Create new journal and place it in the same directory as default"""
+    dirname = os.path.dirname(config['journals']['default'])
+    config['journals'][name] = os.path.join(dirname, name + '.txt')
+    install.save_config(config, config_path=CONFIG_PATH)
+
+
 def list_journals(config):
     """List the journals specified in the configuration file"""
     sep = "\n"
@@ -145,6 +153,10 @@ def run(manual_args=None):
         print(util.py2encode(list_journals(config)))
         sys.exit(0)
 
+    if args.nj:
+        new_journal(config, args.nj)
+        sys.exit(0)
+        
     log.debug('Using configuration "%s"', config)
     original_config = config.copy()
     # check if the configuration is supported by available modules
